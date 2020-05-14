@@ -48,6 +48,14 @@ module.exports = {
   connectMeteor(reactClass) {
     return reactMixin.onClass(reactClass, Mixin);
   },
+  componentDidMount() {
+    NetInfo.addEventListener(this.handleConnectivityChange);
+
+    // The fetch is not needed as the listen will send the current state when you subscribe to it
+  },
+  componentWillUnmount() {
+    NetInfo.removeEventListener(this.handleConnectivityChange);
+  },
   ...User,
   status() {
     return {
@@ -88,11 +96,15 @@ module.exports = {
       ...options,
     });
 
-    NetInfo.isConnected.addEventListener('connectionChange', isConnected => {
-      if (isConnected && Data.ddp.autoReconnect) {
-        Data.ddp.connect();
+    handleConnectivityChange = state => {
+      if (state.isConnected) {
+        Alert.alert('online');
+        this.setState({connection_Status: 'Online'});
+      } else {
+        Alert.alert('offline');
+        this.setState({connection_Status: 'Offline'});
       }
-    });
+    };
 
     Data.ddp.on('connected', () => {
       // Clear the collections of any stale data in case this is a reconnect
